@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LeanTrack - Body Fat Loss & Macro Tracker</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- Google Font: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            brand: {
+              bg: '#090d16',
+              card: 'rgba(17, 24, 39, 0.75)',
+              border: 'rgba(255, 255, 255, 0.08)',
+              emerald: '#10b981',
+              teal: '#14b8a6',
+              pink: '#ec4899',
+              amber: '#f59e0b',
+              blue: '#3b82f6',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    body {
+      background-color: #080c14;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(20, 184, 166, 0.06) 0px, transparent 50%),
+        radial-gradient(at 50% 50%, rgba(236, 72, 153, 0.04) 0px, transparent 50%);
+      background-attachment: fixed;
+    }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-card-hover {
+      transition: all 0.2s ease-in-out;
+    }
+    .glass-card-hover:hover {
+      border-color: rgba(16, 185, 129, 0.3);
+      transform: translateY(-2px);
+    }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
+  </style>
+</head>
+<body class="text-slate-100 font-sans min-h-screen pb-16 antialiased selection:bg-emerald-500 selection:text-white">
+
+  <!-- APP CONTAINER -->
+  <div id="app" class="max-w-5xl mx-auto px-4 py-4 md:py-8 space-y-6">
+
+    <!-- HEADER / NAVIGATION -->
+    <header class="glass-card rounded-2xl p-4 md:p-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl">
+      <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-emerald-500/20">
+            <i class="fa-solid fa-bolt"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-emerald-400 bg-clip-text text-transparent">
+              LeanTrack
+            </h1>
+            <p class="text-xs text-slate-400 font-medium">Body Fat Loss Engine</p>
+          </div>
+        </div>
+        
+        <!-- Quick Action Header Buttons -->
+        <div class="flex items-center gap-2 md:hidden">
+          <button onclick="openProfileModal()" class="p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white text-xs flex items-center gap-1 border border-slate-700">
+            <i class="fa-solid fa-sliders"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Date Controller & Main Actions -->
+      <div class="flex flex-wrap items-center justify-between md:justify-end gap-3 w-full md:w-auto">
+        <!-- Date Switcher -->
+        <div class="flex items-center bg-slate-900/80 rounded-xl p-1 border border-slate-800 text-xs">
+          <button onclick="changeDate(-1)" class="px-2.5 py-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+          <input type="date" id="currentDateInput" onchange="setDate(this.value)" class="bg-transparent text-center font-semibold text-slate-200 focus:outline-none cursor-pointer px-2" />
+          <button onclick="changeDate(1)" class="px-2.5 py-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+          <button onclick="setToday()" class="ml-1 px-2 py-1 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded-md font-medium text-[11px] transition">
+            Today
+          </button>
+        </div>
+
+        <div class="hidden md:flex items-center gap-2">
+          <button onclick="openProfileModal()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-2 border border-slate-700 transition">
+            <i class="fa-solid fa-sliders text-emerald-400"></i> Profile & Targets
+          </button>
+          <button onclick="exportData()" title="Backup JSON" class="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white text-xs border border-slate-700 transition">
+            <i class="fa-solid fa-download"></i>
+          </button>
+          <button onclick="triggerImport()" title="Import JSON" class="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white text-xs border border-slate-700 transition">
+            <i class="fa-solid fa-upload"></i>
+          </button>
+          <input type="file" id="importFileInput" onchange="importData(event)" class="hidden" accept=".json" />
+        </div>
+      </div>
+    </header>
+
+    <!-- NAVIGATION TABS -->
+    <nav class="flex rounded-xl bg-slate-900/60 p-1 border border-slate-800 text-xs md:text-sm font-semibold">
+      <button id="tab-btn-dashboard" onclick="switchTab('dashboard')" class="flex-1 py-2.5 rounded-lg text-center transition flex items-center justify-center gap-2 bg-emerald-500 text-slate-950 font-bold shadow-md shadow-emerald-500/20">
+        <i class="fa-solid fa-chart-pie"></i> Daily Log
+      </button>
+      <button id="tab-btn-trend" onclick="switchTab('trend')" class="flex-1 py-2.5 rounded-lg text-center text-slate-400 hover:text-slate-200 transition flex items-center justify-center gap-2">
+        <i class="fa-solid fa-chart-line"></i> Weight & 7-Day Trend
+      </button>
+      <button id="tab-btn-quickadd" onclick="switchTab('quickadd')" class="flex-1 py-2.5 rounded-lg text-center text-slate-400 hover:text-slate-200 transition flex items-center justify-center gap-2">
+        <i class="fa-solid fa-utensils"></i> Fat-Loss Foods
+      </button>
+    </nav>
+
+    <!-- VIEW 1: DAILY DASHBOARD -->
+    <main id="view-dashboard" class="space-y-6">
+
+      <!-- TOP METRICS GRID (Calorie Ring + Macros) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Calorie Ring Card -->
+        <div class="lg:col-span-5 glass-card rounded-2xl p-6 flex flex-col items-center justify-center relative overflow-hidden">
+          <h2 class="text-xs font-bold text-slate-400 tracking-wider uppercase mb-2">Energy Balance</h2>
+          
+          <div class="relative w-48 h-48 flex items-center justify-center my-2">
+            <svg class="w-full h-full -rotate-90" viewBox="0 0 120 120">
+              <!-- Background Circle -->
+              <circle cx="60" cy="60" r="50" stroke="currentColor" stroke-width="10" class="text-slate-800" fill="transparent" />
+              <!-- Exercise Burn Circle -->
+              <circle id="ring-burn" cx="60" cy="60" r="50" stroke="#3b82f6" stroke-width="10" stroke-linecap="round" fill="transparent"
+                      stroke-dasharray="314.15" stroke-dashoffset="314.15" class="transition-all duration-700 ease-out" />
+              <!-- Food Calorie Progress Circle -->
+              <circle id="ring-food" cx="60" cy="60" r="50" stroke="#10b981" stroke-width="10" stroke-linecap="round" fill="transparent"
+                      stroke-dasharray="314.15" stroke-dashoffset="314.15" class="transition-all duration-700 ease-out" />
+            </svg>
+            
+            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+              <span id="dash-cal-remaining" class="text-3xl font-extrabold text-white tracking-tight">0</span>
+              <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">kcal remaining</span>
+              <div class="text-[10px] text-slate-500 mt-1 flex items-center gap-1.5">
+                <span>Target: <strong id="dash-cal-target" class="text-slate-300">0</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 w-full pt-4 mt-2 border-t border-slate-800/80 text-center text-xs">
+            <div>
+              <p class="text-slate-400 text-[11px]">Eaten</p>
+              <p id="dash-cal-eaten" class="font-bold text-emerald-400 text-sm">0</p>
+            </div>
+            <div>
+              <p class="text-slate-400 text-[11px]">Burned</p>
+              <p id="dash-cal-burned" class="font-bold text-blue-400 text-sm">0</p>
+            </div>
+            <div>
+              <p class="text-slate-400 text-[11px]">Net Cal</p>
+              <p id="dash-cal-net" class="font-bold text-white text-sm">0</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Macros Breakdown Card -->
+        <div class="lg:col-span-7 glass-card rounded-2xl p-6 flex flex-col justify-between space-y-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-xs font-bold text-slate-400 tracking-wider uppercase">Macronutrients</h2>
+              <p class="text-xs text-slate-400">Fat-Loss Optimized Ratio</p>
+            </div>
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              Deficit Mode
+            </span>
+          </div>
+
+          <div class="space-y-4">
+            <!-- Protein Bar -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs">
+                <span class="font-semibold text-teal-400 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-teal-400 inline-block"></span> Protein (High)
+                </span>
+                <span class="font-medium text-slate-300"><span id="dash-p-cur">0</span> / <span id="dash-p-target">0</span>g</span>
+              </div>
+              <div class="w-full h-3 bg-slate-800 rounded-full overflow-hidden p-0.5">
+                <div id="bar-protein" class="h-full bg-gradient-to-r from-teal-500 to-teal-300 rounded-full transition-all duration-500" style="width: 0%"></div>
+              </div>
+            </div>
+
+            <!-- Carbs Bar -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs">
+                <span class="font-semibold text-pink-400 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-pink-400 inline-block"></span> Carbohydrates
+                </span>
+                <span class="font-medium text-slate-300"><span id="dash-c-cur">0</span> / <span id="dash-c-target">0</span>g</span>
+              </div>
+              <div class="w-full h-3 bg-slate-800 rounded-full overflow-hidden p-0.5">
+                <div id="bar-carbs" class="h-full bg-gradient-to-r from-pink-500 to-pink-300 rounded-full transition-all duration-500" style="width: 0%"></div>
+              </div>
+            </div>
+
+            <!-- Fat Bar -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs">
+                <span class="font-semibold text-amber-400 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span> Healthy Fats
+                </span>
+                <span class="font-medium text-slate-300"><span id="dash-f-cur">0</span> / <span id="dash-f-target">0</span>g</span>
+              </div>
+              <div class="w-full h-3 bg-slate-800 rounded-full overflow-hidden p-0.5">
+                <div id="bar-fat" class="h-full bg-gradient-to-r from-amber-500 to-amber-300 rounded-full transition-all duration-500" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Water & Steps Bar -->
+          <div class="grid grid-cols-2 gap-3 pt-2">
+            <!-- Hydration Widget -->
+            <div class="bg-slate-900/60 rounded-xl p-3 border border-slate-800/80 flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center text-sm">
+                  <i class="fa-solid fa-droplet"></i>
+                </div>
+                <div>
+                  <p class="text-[11px] text-slate-400 font-medium">Water (250ml)</p>
+                  <p class="text-xs font-bold text-slate-200"><span id="dash-water-count">0</span> / 12 glasses</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-1">
+                <button onclick="addWater(-1)" class="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex items-center justify-center">-</button>
+                <button onclick="addWater(1)" class="w-6 h-6 rounded bg-blue-600 hover:bg-blue-500 text-white text-xs flex items-center justify-center">+</button>
+              </div>
+            </div>
+
+            <!-- Steps Widget -->
+            <div class="bg-slate-900/60 rounded-xl p-3 border border-slate-800/80 flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-sm">
+                  <i class="fa-solid fa-person-walking"></i>
+                </div>
+                <div>
+                  <p class="text-[11px] text-slate-400 font-medium">Steps Log</p>
+                  <p class="text-xs font-bold text-slate-200"><span id="dash-steps-count">0</span> / 10k</p>
+                </div>
+              </div>
+              <button onclick="promptSteps()" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-emerald-400 border border-slate-700">
+                Log
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- MAIN LOGGING SECTION -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left 7 cols: Logged Meals & Quick Form -->
+        <div class="lg:col-span-7 space-y-5">
+          
+          <!-- Custom Meal Entry Form -->
+          <div class="glass-card rounded-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                <i class="fa-solid fa-plus text-emerald-400"></i> Add Food / Meal Entry
+              </h3>
+              <button onclick="switchTab('quickadd')" class="text-xs text-emerald-400 hover:underline font-medium">
+                Browse Presets &rarr;
+              </button>
+            </div>
+
+            <form id="addMealForm" onsubmit="handleManualMealSubmit(event)" class="space-y-3">
+              <div class="grid grid-cols-12 gap-2">
+                <input type="text" id="meal-name" placeholder="Food name (e.g., Grilled Chicken)" required
+                       class="col-span-8 bg-slate-900/90 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500" />
+                <select id="meal-category" class="col-span-4 bg-slate-900/90 border border-slate-700/80 rounded-xl px-2 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+                  <option value="Breakfast">Breakfast</option>
+                  <option value="Lunch">Lunch</option>
+                  <option value="Dinner">Dinner</option>
+                  <option value="Snack" selected>Snack</option>
+                </select>
+              </div>
+
+              <div class="grid grid-cols-4 gap-2">
+                <div>
+                  <label class="block text-[10px] text-slate-400 font-semibold mb-1">Calories</label>
+                  <input type="number" id="meal-cal" placeholder="kcal" required min="0" step="1"
+                         class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500" />
+                </div>
+                <div>
+                  <label class="block text-[10px] text-teal-400 font-semibold mb-1">Protein (g)</label>
+                  <input type="number" id="meal-p" placeholder="g" min="0" step="0.1" value="0"
+                         class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-teal-500" />
+                </div>
+                <div>
+                  <label class="block text-[10px] text-pink-400 font-semibold mb-1">Carbs (g)</label>
+                  <input type="number" id="meal-c" placeholder="g" min="0" step="0.1" value="0"
+                         class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-pink-500" />
+                </div>
+                <div>
+                  <label class="block text-[10px] text-amber-400 font-semibold mb-1">Fat (g)</label>
+                  <input type="number" id="meal-f" placeholder="g" min="0" step="0.1" value="0"
+                         class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500" />
+                </div>
+              </div>
+
+              <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold rounded-xl text-xs shadow-lg shadow-emerald-500/20 transition">
+                Add to Daily Log
+              </button>
+            </form>
+          </div>
+
+          <!-- Logged Meals List -->
+          <div class="glass-card rounded-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                <i class="fa-solid fa-list-check text-emerald-400"></i> Today's Meal Logs
+              </h3>
+              <span id="meal-count-badge" class="text-[11px] font-semibold text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full">0 entries</span>
+            </div>
+
+            <div id="meals-container" class="space-y-4 max-h-[420px] overflow-y-auto pr-1 custom-scrollbar">
+              <!-- Dynamic meal cards will render here -->
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right 5 cols: Workout Logger & Quick Weight Log -->
+        <div class="lg:col-span-5 space-y-5">
+          
+          <!-- Quick Daily Weight Card -->
+          <div class="glass-card rounded-2xl p-5 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                <i class="fa-solid fa-weight-scale text-teal-400"></i> Log Scale Weight
+              </h3>
+              <span class="text-xs text-slate-400 font-medium">Morning (Fasted)</span>
+            </div>
+            
+            <form onsubmit="handleWeightLogSubmit(event)" class="flex gap-2">
+              <div class="relative flex-1">
+                <input type="number" id="quick-weight-input" step="0.1" placeholder="e.g. 82.5" required
+                       class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-teal-500" />
+                <span class="absolute right-3 top-2 text-xs text-slate-500 font-semibold">kg</span>
+              </div>
+              <button type="submit" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-teal-400 font-semibold text-xs rounded-xl border border-slate-700 transition">
+                Save Log
+              </button>
+            </form>
+            <p id="today-weight-status" class="text-[11px] text-slate-400">No weight recorded for this date yet.</p>
+          </div>
+
+          <!-- Workout Logger Card -->
+          <div class="glass-card rounded-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                <i class="fa-solid fa-dumbbell text-blue-400"></i> Workout / Activity Log
+              </h3>
+            </div>
+
+            <form onsubmit="handleWorkoutSubmit(event)" class="space-y-3">
+              <input type="text" id="workout-name" placeholder="Exercise / Cardio (e.g. Incline Walk)" required
+                     class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500" />
+
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[10px] text-slate-400 font-semibold mb-1">Duration (mins)</label>
+                  <input type="number" id="workout-duration" placeholder="30" required min="1"
+                         class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500" />
+                </div>
+                <div>
+                  <label class="block text-[10px] text-blue-400 font-semibold mb-1">Est. Burn (kcal)</label>
+                  <input type="number" id="workout-burn" placeholder="200" required min="1"
+                         class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500" />
+                </div>
+              </div>
+
+              <button type="submit" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-blue-400 font-semibold rounded-xl text-xs border border-slate-700 transition">
+                Log Workout
+              </button>
+            </form>
+
+            <div id="workouts-container" class="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+              <!-- Dynamic workout cards -->
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </main>
+
+    <!-- VIEW 2: WEIGHT & 7-DAY TRENDLINE TRACKER -->
+    <main id="view-trend" class="space-y-6 hidden">
+      <div class="glass-card rounded-2xl p-6 space-y-6">
+        
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+          <div>
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-chart-line text-emerald-400"></i> Fat Loss Trendline & 7-Day Average
+            </h2>
+            <p class="text-xs text-slate-400">Filters out daily water fluctuations using a 7-day moving average.</p>
+          </div>
+          
+          <div class="flex items-center gap-4 text-xs">
+            <div class="bg-slate-900 px-3 py-2 rounded-xl border border-slate-800">
+              <span class="text-slate-400">Current Trend: </span>
+              <strong id="trend-7day-val" class="text-emerald-400 font-bold">-- kg</strong>
+            </div>
+            <div class="bg-slate-900 px-3 py-2 rounded-xl border border-slate-800">
+              <span class="text-slate-400">Est. Weeks to Goal: </span>
+              <strong id="trend-weeks-goal" class="text-teal-400 font-bold">--</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- HTML5 CANVAS CHART -->
+        <div class="relative w-full h-72 md:h-80 bg-slate-950/60 rounded-xl p-3 border border-slate-800/80">
+          <canvas id="weightChart" class="w-full h-full block"></canvas>
+        </div>
+
+        <!-- Weight History & Delete Table -->
+        <div class="space-y-3">
+          <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Weight History Logs</h3>
+          
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-slate-900/80 text-slate-400 text-[11px] uppercase border-b border-slate-800">
+                <tr>
+                  <th class="py-2.5 px-3">Date</th>
+                  <th class="py-2.5 px-3">Scale Weight</th>
+                  <th class="py-2.5 px-3">7-Day Moving Avg</th>
+                  <th class="py-2.5 px-3 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="weight-history-tbody" class="divide-y divide-slate-800/60">
+                <!-- Dynamic rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- VIEW 3: FAT-LOSS QUICK ADD FOODS DATABASE -->
+    <main id="view-quickadd" class="space-y-6 hidden">
+      <div class="glass-card rounded-2xl p-6 space-y-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-fire-flame-curved text-amber-400"></i> High-Protein & Fat-Loss Staples
+            </h2>
+            <p class="text-xs text-slate-400">Tap any item to open the dynamic gram portion scaler before logging.</p>
+          </div>
+          
+          <!-- Search box -->
+          <input type="text" id="food-search" oninput="renderQuickAddGrid()" placeholder="Search preset foods..." 
+                 class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 w-full md:w-64" />
+        </div>
+
+        <div id="quick-food-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 pt-2">
+          <!-- Dynamic preset cards -->
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- PORTION SCALER MODAL -->
+  <div id="scalerModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="glass-card rounded-2xl max-w-md w-full p-6 space-y-5 border border-slate-700 shadow-2xl relative animate-in fade-in zoom-in duration-200">
+      <button onclick="closeScalerModal()" class="absolute right-4 top-4 text-slate-400 hover:text-white text-sm">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div>
+        <h3 id="modal-food-title" class="text-base font-bold text-white">Food Name</h3>
+        <p class="text-xs text-slate-400">Adjust weight to scale calories & macros dynamically.</p>
+      </div>
+
+      <!-- Gram Weight Scaler Controls -->
+      <div class="space-y-3 bg-slate-900/80 p-4 rounded-xl border border-slate-800">
+        <div class="flex justify-between items-center">
+          <label class="text-xs font-semibold text-slate-300">Portion Weight:</label>
+          <div class="flex items-center gap-1">
+            <input type="number" id="scaler-grams" oninput="updateScaledMacros()" min="1" max="2000" class="w-20 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-xs text-center font-bold text-emerald-400 focus:outline-none" />
+            <span class="text-xs font-semibold text-slate-400">grams</span>
+          </div>
+        </div>
+
+        <input type="range" id="scaler-range" oninput="syncScalerInput(this.value)" min="10" max="500" step="5" class="w-full accent-emerald-500 cursor-pointer" />
+      </div>
+
+      <!-- Scaled Macro Preview Display -->
+      <div class="grid grid-cols-4 gap-2 text-center bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+        <div>
+          <p class="text-[10px] text-slate-400 uppercase font-semibold">Calories</p>
+          <p id="scaled-cal" class="text-sm font-extrabold text-emerald-400">0</p>
+        </div>
+        <div>
+          <p class="text-[10px] text-teal-400 uppercase font-semibold">Protein</p>
+          <p id="scaled-p" class="text-sm font-extrabold text-slate-200">0g</p>
+        </div>
+        <div>
+          <p class="text-[10px] text-pink-400 uppercase font-semibold">Carbs</p>
+          <p id="scaled-c" class="text-sm font-extrabold text-slate-200">0g</p>
+        </div>
+        <div>
+          <p class="text-[10px] text-amber-400 uppercase font-semibold">Fat</p>
+          <p id="scaled-f" class="text-sm font-extrabold text-slate-200">0g</p>
+        </div>
+      </div>
+
+      <!-- Meal Category Select & Add Button -->
+      <div class="space-y-3">
+        <select id="scaler-category" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none">
+          <option value="Breakfast">Add to Breakfast</option>
+          <option value="Lunch">Add to Lunch</option>
+          <option value="Dinner">Add to Dinner</option>
+          <option value="Snack" selected>Add to Snack</option>
+        </select>
+
+        <button onclick="confirmScaledMealAdd()" class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-emerald-500/20 transition">
+          Confirm & Add to Log
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE & TDEE CALCULATOR MODAL -->
+  <div id="profileModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="glass-card rounded-2xl max-w-lg w-full p-6 space-y-5 border border-slate-700 shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scrollbar">
+      <button onclick="closeProfileModal()" class="absolute right-4 top-4 text-slate-400 hover:text-white text-sm">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div>
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-calculator text-emerald-400"></i> Mifflin-St Jeor TDEE & Macro Setup
+        </h3>
+        <p class="text-xs text-slate-400">Calculates personalized calorie targets optimized for body fat loss.</p>
+      </div>
+
+      <form onsubmit="handleProfileSave(event)" class="space-y-4 text-xs">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-400 font-semibold mb-1">Biological Sex</label>
+            <select id="prof-sex" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-slate-200">
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-slate-400 font-semibold mb-1">Age (Years)</label>
+            <input type="number" id="prof-age" value="30" required min="15" max="100" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-slate-200" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-400 font-semibold mb-1">Height (cm)</label>
+            <input type="number" id="prof-height" value="178" required min="120" max="230" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-slate-200" />
+          </div>
+          <div>
+            <label class="block text-slate-400 font-semibold mb-1">Current Weight (kg)</label>
+            <input type="number" id="prof-weight" step="0.1" value="85" required min="30" max="250" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-slate-200" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-400 font-semibold mb-1">Activity Multiplier</label>
+          <select id="prof-activity" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-slate-200">
+            <option value="1.2">Sedentary (Office job, minimal exercise)</option>
+            <option value="1.375" selected>Lightly Active (1-3 workouts/week)</option>
+            <option value="1.55">Moderately Active (3-5 workouts/week)</option>
+            <option value="1.725">Very Active (6-7 intense workouts/week)</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-emerald-400 font-semibold mb-1">Fat Loss Deficit (kcal)</label>
+            <select id="prof-deficit" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-slate-200">
+              <option value="300">Moderate Deficit (-300 kcal)</option>
+              <option value="500" selected>Standard Fat Loss (-500 kcal)</option>
+              <option value="750">Aggressive Fat Loss (-750 kcal)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-teal-400 font-semibold mb-1">Protein Target (g/kg)</label>
+            <select id="prof-protein-ratio" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-slate-200">
+              <option value="1.8">1.8g / kg (Standard)</option>
+              <option value="2.0" selected>2.0g / kg (High Muscle Retention)</option>
+              <option value="2.2">2.2g / kg (Maximum Saturation)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-400 font-semibold mb-1">Target Goal Weight (kg)</label>
+          <input type="number" id="prof-target-weight" step="0.1" value="75" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-slate-200" />
+        </div>
+
+        <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800 space-y-1 text-[11px] text-slate-400">
+          <div class="flex justify-between"><span>Calculated BMR:</span> <strong id="calc-bmr" class="text-slate-200">--</strong></div>
+          <div class="flex justify-between"><span>Calculated TDEE:</span> <strong id="calc-tdee" class="text-slate-200">--</strong></div>
+          <div class="flex justify-between"><span>Target Daily Calorie:</span> <strong id="calc-target-cal" class="text-emerald-400">--</strong></div>
+        </div>
+
+        <button type="submit" class="w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg transition">
+          Calculate & Save Targets
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- UNDO TOAST BANNER -->
+  <div id="undoToast" class="fixed bottom-5 right-5 z-50 glass-card border border-emerald-500/40 rounded-xl p-3 shadow-2xl flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs">
+      <i class="fa-solid fa-rotate-left"></i>
+    </div>
+    <div>
+      <p id="undoToastText" class="text-xs font-medium text-slate-200">Item deleted.</p>
+    </div>
+    <button onclick="undoLastAction()" class="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition">
+      Undo
+    </button>
+  </div>
+
+  <!-- JAVASCRIPT APP ENGINE -->
+  <script>
+    // -------------------------------------------------------------
+    // PRESET HIGH PROTEIN & FAT LOSS STAPLES
+    // -------------------------------------------------------------
+    const PRESET_FOODS = [
+      { id: 'p1', name: 'Chicken Breast (Cooked)', cal100: 165, p100: 31.0, c100: 0.0, f100: 3.6, category: 'Protein' },
+      { id: 'p2', name: 'Non-Fat Greek Yogurt (0%)', cal100: 59, p100: 10.3, c100: 3.6, f100: 0.4, category: 'Protein' },
+      { id: 'p3', name: 'Whey Protein Isolate', cal100: 370, p100: 82.0, c100: 3.0, f100: 1.5, category: 'Protein' },
+      { id: 'p4', name: 'Egg Whites', cal100: 52, p100: 11.0, c100: 0.7, f100: 0.2, category: 'Protein' },
+      { id: 'p5', name: 'Whole Eggs (Large)', cal100: 143, p100: 12.6, c100: 0.7, f100: 9.5, category: 'Protein/Fat' },
+      { id: 'p6', name: 'Atlantic Salmon (Baked)', cal100: 206, p100: 22.0, c100: 0.0, f100: 12.0, category: 'Protein/Fat' },
+      { id: 'p7', name: 'Rolled Oats (Dry)', cal100: 379, p100: 13.5, c100: 67.0, f100: 6.5, category: 'Carbs' },
+      { id: 'p8', name: 'White / Jasmine Rice (Cooked)', cal100: 130, p100: 2.7, c100: 28.0, f100: 0.3, category: 'Carbs' },
+      { id: 'p9', name: 'Sweet Potato (Baked)', cal100: 90, p100: 2.0, c100: 21.0, f100: 0.1, category: 'Carbs' },
+      { id: 'p10', name: 'Low-Fat Cottage Cheese (2%)', cal100: 81, p100: 11.5, c100: 4.7, f100: 2.3, category: 'Protein' },
+      { id: 'p11', name: 'Avocado', cal100: 160, p100: 2.0, c100: 8.5, f100: 14.7, category: 'Fat' },
+      { id: 'p12', name: 'Steamed Broccoli', cal100: 35, p100: 2.4, c100: 7.0, f100: 0.4, category: 'Veggie' }
+    ];
+
+    // -------------------------------------------------------------
+    // APPLICATION STATE & STORAGE
+    // -------------------------------------------------------------
+    const STORAGE_KEY = 'leanTrack_appData_v1';
+
+    let state = {
+      profile: {
+        sex: 'male',
+        age: 30,
+        height: 178,
+        weight: 85,
+        activity: 1.375,
+        deficit: 500,
+        proteinRatio: 2.0,
+        targetWeight: 75,
+        targetCal: 2050,
+        targetP: 170,
+        targetC: 190,
+        targetF: 57
+      },
+      currentDate: getTodayString(),
+      logs: {}, // Format: { 'YYYY-MM-DD': { meals: [], workouts: [], water: 0, steps: 0, weight: null } }
+      deletedStack: []
+    };
+
+    let selectedPreset = null;
+
+    // Helper: Today YYYY-MM-DD
+    function getTodayString() {
+      const d = new Date();
+      return d.toISOString().split('T')[0];
+    }
+
+    // Initialize App Data
+    function initApp() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          state.profile = { ...state.profile, ...parsed.profile };
+          state.logs = parsed.logs || {};
+        } catch (e) {
+          console.error("Failed to parse saved state", e);
+        }
+      }
+
+      ensureDateLogExists(state.currentDate);
+      document.getElementById('currentDateInput').value = state.currentDate;
+      
+      calculateAndRenderProfileTargets();
+      renderDashboard();
+      renderQuickAddGrid();
+      
+      // Auto resize listener for canvas chart
+      window.addEventListener('resize', () => {
+        if (!document.getElementById('view-trend').classList.contains('hidden')) {
+          renderWeightChart();
+        }
+      });
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        profile: state.profile,
+        logs: state.logs
+      }));
+    }
+
+    function ensureDateLogExists(dateStr) {
+      if (!state.logs[dateStr]) {
+        state.logs[dateStr] = {
+          meals: [],
+          workouts: [],
+          water: 0,
+          steps: 0,
+          weight: null
+        };
+      }
+    }
+
+    // -------------------------------------------------------------
+    // NAVIGATION & TAB SWITCHING
+    // -------------------------------------------------------------
+    function switchTab(tabName) {
+      const tabs = ['dashboard', 'trend', 'quickadd'];
+      tabs.forEach(t => {
+        const view = document.getElementById(`view-${t}`);
+        const btn = document.getElementById(`tab-btn-${t}`);
+        if (t === tabName) {
+          view.classList.remove('hidden');
+          btn.className = "flex-1 py-2.5 rounded-lg text-center transition flex items-center justify-center gap-2 bg-emerald-500 text-slate-950 font-bold shadow-md shadow-emerald-500/20";
+        } else {
+          view.classList.add('hidden');
+          btn.className = "flex-1 py-2.5 rounded-lg text-center text-slate-400 hover:text-slate-200 transition flex items-center justify-center gap-2";
+        }
+      });
+
+      if (tabName === 'trend') {
+        renderWeightChart();
+        renderWeightHistoryTable();
+      }
+    }
+
+    function setDate(dateStr) {
+      if (!dateStr) return;
+      state.currentDate = dateStr;
+      ensureDateLogExists(dateStr);
+      saveState();
+      renderDashboard();
+    }
+
+    function changeDate(deltaDays) {
+      const cur = new Date(state.currentDate);
+      cur.setDate(cur.getDate() + deltaDays);
+      const newStr = cur.toISOString().split('T')[0];
+      document.getElementById('currentDateInput').value = newStr;
+      setDate(newStr);
+    }
+
+    function setToday() {
+      const todayStr = getTodayString();
+      document.getElementById('currentDateInput').value = todayStr;
+      setDate(todayStr);
+    }
+
+    // -------------------------------------------------------------
+    // PROFILE & MIFFLIN-ST JEOR CALCULATOR
+    // -------------------------------------------------------------
+    function openProfileModal() {
+      const p = state.profile;
+      document.getElementById('prof-sex').value = p.sex;
+      document.getElementById('prof-age').value = p.age;
+      document.getElementById('prof-height').value = p.height;
+      document.getElementById('prof-weight').value = p.weight;
+      document.getElementById('prof-activity').value = p.activity;
+      document.getElementById('prof-deficit').value = p.deficit;
+      document.getElementById('prof-protein-ratio').value = p.proteinRatio;
+      document.getElementById('prof-target-weight').value = p.targetWeight;
+      
+      calculateAndRenderProfileTargets();
+      document.getElementById('profileModal').classList.remove('hidden');
+    }
+
+    function closeProfileModal() {
+      document.getElementById('profileModal').classList.add('hidden');
+    }
+
+    function calculateAndRenderProfileTargets() {
+      const sex = document.getElementById('prof-sex')?.value || state.profile.sex;
+      const age = parseFloat(document.getElementById('prof-age')?.value || state.profile.age);
+      const height = parseFloat(document.getElementById('prof-height')?.value || state.profile.height);
+      const weight = parseFloat(document.getElementById('prof-weight')?.value || state.profile.weight);
+      const activity = parseFloat(document.getElementById('prof-activity')?.value || state.profile.activity);
+      const deficit = parseFloat(document.getElementById('prof-deficit')?.value || state.profile.deficit);
+      const proteinRatio = parseFloat(document.getElementById('prof-protein-ratio')?.value || state.profile.proteinRatio);
+
+      // Mifflin-St Jeor Formula
+      let bmr = (10 * weight) + (6.25 * height) - (5 * age);
+      bmr = (sex === 'male') ? bmr + 5 : bmr - 161;
+
+      const tdee = bmr * activity;
+      const targetCal = Math.max(1200, Math.round(tdee - deficit));
+
+      // Macros Calculation
+      const targetP = Math.round(weight * proteinRatio);
+      const fatCalories = targetCal * 0.25; // 25% healthy fats
+      const targetF = Math.round(fatCalories / 9);
+      const remainingCalForCarbs = targetCal - (targetP * 4) - (targetF * 9);
+      const targetC = Math.max(20, Math.round(remainingCalForCarbs / 4));
+
+      // Update Modal Display
+      if (document.getElementById('calc-bmr')) {
+        document.getElementById('calc-bmr').innerText = `${Math.round(bmr)} kcal`;
+        document.getElementById('calc-tdee').innerText = `${Math.round(tdee)} kcal`;
+        document.getElementById('calc-target-cal').innerText = `${targetCal} kcal`;
+      }
+
+      return { bmr, tdee, targetCal, targetP, targetC, targetF, sex, age, height, weight, activity, deficit, proteinRatio };
+    }
+
+    function handleProfileSave(e) {
+      e.preventDefault();
+      const res = calculateAndRenderProfileTargets();
+      const targetWeight = parseFloat(document.getElementById('prof-target-weight').value) || state.profile.targetWeight;
+
+      state.profile = {
+        sex: res.sex,
+        age: res.age,
+        height: res.height,
+        weight: res.weight,
+        activity: res.activity,
+        deficit: res.deficit,
+        proteinRatio: res.proteinRatio,
+        targetWeight: targetWeight,
+        targetCal: res.targetCal,
+        targetP: res.targetP,
+        targetC: res.targetC,
+        targetF: res.targetF
+      };
+
+      saveState();
+      closeProfileModal();
+      renderDashboard();
+    }
+
+    // -------------------------------------------------------------
+    // DASHBOARD RENDERING & LOGIC
+    // -------------------------------------------------------------
+    function renderDashboard() {
+      const log = state.logs[state.currentDate] || { meals: [], workouts: [], water: 0, steps: 0, weight: null };
+      const prof = state.profile;
+
+      // Calculate totals
+      let eatenCal = 0, pTotal = 0, cTotal = 0, fTotal = 0;
+      log.meals.forEach(m => {
+        eatenCal += m.cal;
+        pTotal += m.p;
+        cTotal += m.c;
+        fTotal += m.f;
+      });
+
+      let burnedCal = 0;
+      log.workouts.forEach(w => burnedCal += w.burn);
+
+      const netCal = eatenCal - burnedCal;
+      const remainingCal = prof.targetCal - netCal;
+
+      // Render Calorie Stats
+      document.getElementById('dash-cal-target').innerText = prof.targetCal;
+      document.getElementById('dash-cal-remaining').innerText = remainingCal;
+      document.getElementById('dash-cal-eaten').innerText = eatenCal;
+      document.getElementById('dash-cal-burned').innerText = burnedCal;
+      document.getElementById('dash-cal-net').innerText = netCal;
+
+      // Update Calorie Ring SVG
+      const circumference = 314.15; // 2 * PI * r (50)
+      const foodRatio = Math.min(1, eatenCal / prof.targetCal);
+      const burnRatio = Math.min(1, burnedCal / prof.targetCal);
+
+      const foodOffset = circumference - (foodRatio * circumference);
+      const burnOffset = circumference - (burnRatio * circumference);
+
+      document.getElementById('ring-food').style.strokeDashoffset = foodOffset;
+      document.getElementById('ring-burn').style.strokeDashoffset = burnOffset;
+
+      // Render Macro Progress Bars
+      document.getElementById('dash-p-cur').innerText = pTotal.toFixed(1);
+      document.getElementById('dash-p-target').innerText = prof.targetP;
+      document.getElementById('bar-protein').style.width = `${Math.min(100, (pTotal / prof.targetP) * 100)}%`;
+
+      document.getElementById('dash-c-cur').innerText = cTotal.toFixed(1);
+      document.getElementById('dash-c-target').innerText = prof.targetC;
+      document.getElementById('bar-carbs').style.width = `${Math.min(100, (cTotal / prof.targetC) * 100)}%`;
+
+      document.getElementById('dash-f-cur').innerText = fTotal.toFixed(1);
+      document.getElementById('dash-f-target').innerText = prof.targetF;
+      document.getElementById('bar-fat').style.width = `${Math.min(100, (fTotal / prof.targetF) * 100)}%`;
+
+      // Render Water & Steps
+      document.getElementById('dash-water-count').innerText = log.water || 0;
+      document.getElementById('dash-steps-count').innerText = (log.steps || 0).toLocaleString();
+
+      // Render Meals List
+      renderMealsList(log.meals);
+      renderWorkoutsList(log.workouts);
+
+      // Render Weight Quick Log Status
+      const weightStatus = document.getElementById('today-weight-status');
+      if (log.weight) {
+        weightStatus.innerHTML = `Logged: <strong class="text-teal-400 font-bold">${log.weight} kg</strong>`;
+        document.getElementById('quick-weight-input').value = log.weight;
+      } else {
+        weightStatus.innerText = 'No weight recorded for this date yet.';
+        document.getElementById('quick-weight-input').value = '';
+      }
+    }
+
+    // Render Logged Meals List
+    function renderMealsList(meals) {
+      const container = document.getElementById('meals-container');
+      document.getElementById('meal-count-badge').innerText = `${meals.length} items`;
+
+      if (meals.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-8 text-slate-500 text-xs">
+            <i class="fa-solid fa-utensils text-slate-700 text-2xl mb-2"></i>
+            <p>No food logged for this day yet.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = meals.map((m, idx) => `
+        <div class="bg-slate-900/70 rounded-xl p-3 border border-slate-800 flex items-center justify-between gap-2 hover:border-slate-700 transition">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-800 text-slate-400">${m.category}</span>
+              <h4 class="text-xs font-bold text-slate-200 truncate">${escapeHtml(m.name)}</h4>
+            </div>
+            <div class="flex items-center gap-3 mt-1 text-[11px] text-slate-400">
+              <span class="text-emerald-400 font-semibold">${m.cal} kcal</span>
+              <span>P: <strong class="text-teal-300">${m.p}g</strong></span>
+              <span>C: <strong class="text-pink-300">${m.c}g</strong></span>
+              <span>F: <strong class="text-amber-300">${m.f}g</strong></span>
+            </div>
+          </div>
+          <button onclick="deleteMeal(${idx})" class="p-2 text-slate-500 hover:text-red-400 rounded-lg hover:bg-slate-800 transition text-xs" title="Delete entry">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    // Render Workouts List
+    function renderWorkoutsList(workouts) {
+      const container = document.getElementById('workouts-container');
+      if (workouts.length === 0) {
+        container.innerHTML = `<p class="text-[11px] text-slate-500 text-center py-2">No workouts logged.</p>`;
+        return;
+      }
+
+      container.innerHTML = workouts.map((w, idx) => `
+        <div class="bg-slate-900/60 rounded-xl p-2.5 border border-slate-800 flex items-center justify-between text-xs">
+          <div>
+            <p class="font-bold text-slate-200">${escapeHtml(w.name)}</p>
+            <p class="text-[10px] text-slate-400">${w.duration} mins • <span class="text-blue-400 font-semibold">-${w.burn} kcal</span></p>
+          </div>
+          <button onclick="deleteWorkout(${idx})" class="p-1.5 text-slate-500 hover:text-red-400 rounded-lg hover:bg-slate-800 transition">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    // -------------------------------------------------------------
+    // LOGGING ACTIONS & UNDO SYSTEM
+    // -------------------------------------------------------------
+    function handleManualMealSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('meal-name').value.trim();
+      const category = document.getElementById('meal-category').value;
+      const cal = parseInt(document.getElementById('meal-cal').value) || 0;
+      const p = parseFloat(document.getElementById('meal-p').value) || 0;
+      const c = parseFloat(document.getElementById('meal-c').value) || 0;
+      const f = parseFloat(document.getElementById('meal-f').value) || 0;
+
+      const newMeal = { id: Date.now(), name, category, cal, p, c, f };
+      state.logs[state.currentDate].meals.push(newMeal);
+      
+      saveState();
+      renderDashboard();
+
+      // Reset Form
+      document.getElementById('addMealForm').reset();
+    }
+
+    function deleteMeal(index) {
+      const deleted = state.logs[state.currentDate].meals.splice(index, 1)[0];
+      pushUndoAction({ type: 'meal', item: deleted, date: state.currentDate, index });
+      saveState();
+      renderDashboard();
+    }
+
+    function handleWorkoutSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('workout-name').value.trim();
+      const duration = parseInt(document.getElementById('workout-duration').value) || 0;
+      const burn = parseInt(document.getElementById('workout-burn').value) || 0;
+
+      state.logs[state.currentDate].workouts.push({ id: Date.now(), name, duration, burn });
+      saveState();
+      renderDashboard();
+      
+      document.getElementById('workout-name').value = '';
+      document.getElementById('workout-duration').value = '';
+      document.getElementById('workout-burn').value = '';
+    }
+
+    function deleteWorkout(index) {
+      const deleted = state.logs[state.currentDate].workouts.splice(index, 1)[0];
+      pushUndoAction({ type: 'workout', item: deleted, date: state.currentDate, index });
+      saveState();
+      renderDashboard();
+    }
+
+    function handleWeightLogSubmit(e) {
+      e.preventDefault();
+      const w = parseFloat(document.getElementById('quick-weight-input').value);
+      if (w) {
+        state.logs[state.currentDate].weight = w;
+        saveState();
+        renderDashboard();
+      }
+    }
+
+    function deleteWeightLog(dateStr) {
+      if (state.logs[dateStr]) {
+        const oldW = state.logs[dateStr].weight;
+        state.logs[dateStr].weight = null;
+        pushUndoAction({ type: 'weight', item: oldW, date: dateStr });
+        saveState();
+        renderDashboard();
+        renderWeightHistoryTable();
+        renderWeightChart();
+      }
+    }
+
+    function addWater(delta) {
+      const cur = state.logs[state.currentDate].water || 0;
+      state.logs[state.currentDate].water = Math.max(0, cur + delta);
+      saveState();
+      renderDashboard();
+    }
+
+    function promptSteps() {
+      const cur = state.logs[state.currentDate].steps || 0;
+      const val = prompt('Enter your total step count for today:', cur);
+      if (val !== null) {
+        const num = parseInt(val) || 0;
+        state.logs[state.currentDate].steps = num;
+        saveState();
+        renderDashboard();
+      }
+    }
+
+    // Push action onto Undo stack & show toast
+    function pushUndoAction(action) {
+      state.deletedStack.push(action);
+      const toast = document.getElementById('undoToast');
+      const toastText = document.getElementById('undoToastText');
+
+      if (action.type === 'meal') toastText.innerText = `Deleted "${action.item.name}"`;
+      if (action.type === 'workout') toastText.innerText = `Deleted "${action.item.name}"`;
+      if (action.type === 'weight') toastText.innerText = `Deleted weight entry for ${action.date}`;
+
+      toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+
+      clearTimeout(window.undoToastTimer);
+      window.undoToastTimer = setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+      }, 5000);
+    }
+
+    function undoLastAction() {
+      if (state.deletedStack.length === 0) return;
+      const last = state.deletedStack.pop();
+
+      ensureDateLogExists(last.date);
+      if (last.type === 'meal') {
+        state.logs[last.date].meals.splice(last.index, 0, last.item);
+      } else if (last.type === 'workout') {
+        state.logs[last.date].workouts.splice(last.index, 0, last.item);
+      } else if (last.type === 'weight') {
+        state.logs[last.date].weight = last.item;
+      }
+
+      saveState();
+      renderDashboard();
+      if (!document.getElementById('view-trend').classList.contains('hidden')) {
+        renderWeightChart();
+        renderWeightHistoryTable();
+      }
+
+      document.getElementById('undoToast').classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+    }
+
+    // -------------------------------------------------------------
+    // PORTION SCALER MODAL LOGIC
+    // -------------------------------------------------------------
+    function renderQuickAddGrid() {
+      const query = (document.getElementById('food-search')?.value || '').toLowerCase();
+      const grid = document.getElementById('quick-food-grid');
+
+      const filtered = PRESET_FOODS.filter(f => f.name.toLowerCase().includes(query) || f.category.toLowerCase().includes(query));
+
+      grid.innerHTML = filtered.map(f => `
+        <div onclick="openScalerModal('${f.id}')" class="glass-card glass-card-hover rounded-xl p-4 border border-slate-800 cursor-pointer space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">${f.category}</span>
+            <span class="text-xs font-bold text-slate-300">${f.cal100} kcal <span class="text-[10px] font-normal text-slate-500">/100g</span></span>
+          </div>
+          <h4 class="text-xs font-bold text-slate-100 truncate">${f.name}</h4>
+          <div class="grid grid-cols-3 text-[10px] text-slate-400 pt-1 border-t border-slate-800/80">
+            <div>P: <strong class="text-teal-300">${f.p100}g</strong></div>
+            <div>C: <strong class="text-pink-300">${f.c100}g</strong></div>
+            <div>F: <strong class="text-amber-300">${f.f100}g</strong></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openScalerModal(foodId) {
+      selectedPreset = PRESET_FOODS.find(f => f.id === foodId);
+      if (!selectedPreset) return;
+
+      document.getElementById('modal-food-title').innerText = selectedPreset.name;
+      document.getElementById('scaler-grams').value = 100;
+      document.getElementById('scaler-range').value = 100;
+
+      updateScaledMacros();
+      document.getElementById('scalerModal').classList.remove('hidden');
+    }
+
+    function closeScalerModal() {
+      document.getElementById('scalerModal').classList.add('hidden');
+    }
+
+    function syncScalerInput(val) {
+      document.getElementById('scaler-grams').value = val;
+      updateScaledMacros();
+    }
+
+    function updateScaledMacros() {
+      if (!selectedPreset) return;
+      const grams = parseFloat(document.getElementById('scaler-grams').value) || 0;
+      const factor = grams / 100;
+
+      const cal = Math.round(selectedPreset.cal100 * factor);
+      const p = (selectedPreset.p100 * factor).toFixed(1);
+      const c = (selectedPreset.c100 * factor).toFixed(1);
+      const f = (selectedPreset.f100 * factor).toFixed(1);
+
+      document.getElementById('scaled-cal').innerText = cal;
+      document.getElementById('scaled-p').innerText = `${p}g`;
+      document.getElementById('scaled-c').innerText = `${c}g`;
+      document.getElementById('scaled-f').innerText = `${f}g`;
+      document.getElementById('scaler-range').value = Math.min(500, grams);
+    }
+
+    function confirmScaledMealAdd() {
+      if (!selectedPreset) return;
+      const grams = parseFloat(document.getElementById('scaler-grams').value) || 0;
+      const factor = grams / 100;
+      const category = document.getElementById('scaler-category').value;
+
+      const newMeal = {
+        id: Date.now(),
+        name: `${selectedPreset.name} (${grams}g)`,
+        category: category,
+        cal: Math.round(selectedPreset.cal100 * factor),
+        p: parseFloat((selectedPreset.p100 * factor).toFixed(1)),
+        c: parseFloat((selectedPreset.c100 * factor).toFixed(1)),
+        f: parseFloat((selectedPreset.f100 * factor).toFixed(1))
+      };
+
+      ensureDateLogExists(state.currentDate);
+      state.logs[state.currentDate].meals.push(newMeal);
+      
+      saveState();
+      closeScalerModal();
+      switchTab('dashboard');
+      renderDashboard();
+    }
+
+    // -------------------------------------------------------------
+    // WEIGHT TRACKER & HTML5 CANVAS 7-DAY TRENDLINE CHART
+    // -------------------------------------------------------------
+    function getSortedWeightData() {
+      const dates = Object.keys(state.logs).sort();
+      const records = [];
+
+      dates.forEach(d => {
+        if (state.logs[d].weight) {
+          records.push({ date: d, weight: state.logs[d].weight });
+        }
+      });
+
+      // Calculate 7-Day Moving Average
+      for (let i = 0; i < records.length; i++) {
+        let sum = 0;
+        let count = 0;
+        for (let j = Math.max(0, i - 6); j <= i; j++) {
+          sum += records[j].weight;
+          count++;
+        }
+        records[i].ma7 = parseFloat((sum / count).toFixed(2));
+      }
+
+      return records;
+    }
+
+    function renderWeightChart() {
+      const canvas = document.getElementById('weightChart');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+
+      // Set internal dimensions based on parent element
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width * window.devicePixelRatio || 600;
+      canvas.height = rect.height * window.devicePixelRatio || 300;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+      const width = rect.width;
+      const height = rect.height;
+
+      ctx.clearRect(0, 0, width, height);
+
+      const data = getSortedWeightData();
+      if (data.length === 0) {
+        ctx.fillStyle = '#64748b';
+        ctx.font = '12px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('No weight logs yet. Log scale weight on the dashboard to see your 7-day trend.', width / 2, height / 2);
+        
+        document.getElementById('trend-7day-val').innerText = '-- kg';
+        document.getElementById('trend-weeks-goal').innerText = '--';
+        return;
+      }
+
+      // Latest 7-day average and goal stats calculation
+      const latest = data[data.length - 1];
+      document.getElementById('trend-7day-val').innerText = `${latest.ma7} kg`;
+
+      const targetWeight = state.profile.targetWeight;
+      const currentAvg = latest.ma7;
+      const weightDiff = currentAvg - targetWeight;
+
+      if (weightDiff <= 0) {
+        document.getElementById('trend-weeks-goal').innerText = 'Goal Reached!';
+      } else {
+        // Est fat loss rate based on deficit (~0.5kg per 500kcal deficit / week)
+        const weeklyLossRate = (state.profile.deficit / 500) * 0.5; 
+        const weeks = Math.ceil(weightDiff / Math.max(0.2, weeklyLossRate));
+        document.getElementById('trend-weeks-goal').innerText = `~${weeks} weeks`;
+      }
+
+      // Chart Padding & Scales
+      const padding = { top: 25, right: 30, bottom: 40, left: 45 };
+      const chartW = width - padding.left - padding.right;
+      const chartH = height - padding.top - padding.bottom;
+
+      const weights = data.map(d => d.weight);
+      const minW = Math.floor(Math.min(...weights, targetWeight) - 1);
+      const maxW = Math.ceil(Math.max(...weights) + 1);
+
+      const getX = (i) => padding.left + (data.length === 1 ? chartW / 2 : (i / (data.length - 1)) * chartW);
+      const getY = (w) => padding.top + chartH - (((w - minW) / (maxW - minW)) * chartH);
+
+      // Draw Y Grid lines
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.lineWidth = 1;
+      const steps = 4;
+      for (let i = 0; i <= steps; i++) {
+        const val = minW + ((maxW - minW) * (i / steps));
+        const y = getY(val);
+        ctx.beginPath();
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(width - padding.right, y);
+        ctx.stroke();
+
+        ctx.fillStyle = '#64748b';
+        ctx.font = '10px Inter';
+        ctx.textAlign = 'right';
+        ctx.fillText(`${val.toFixed(1)}`, padding.left - 8, y + 3);
+      }
+
+      // Target Weight Line
+      const targetY = getY(targetWeight);
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.6)';
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(padding.left, targetY);
+      ctx.lineTo(width - padding.right, targetY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#f59e0b';
+      ctx.textAlign = 'left';
+      ctx.fillText('Target', width - padding.right + 4, targetY + 3);
+
+      // Draw Daily Weight Raw Points & Dashed Line
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      data.forEach((d, i) => {
+        const x = getX(i);
+        const y = getY(d.weight);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      data.forEach((d, i) => {
+        const x = getX(i);
+        const y = getY(d.weight);
+        ctx.fillStyle = '#94a3b8';
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Draw 7-Day Moving Average Trend Line (Smoothed Teal Gradient)
+      ctx.strokeStyle = '#14b8a6';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      data.forEach((d, i) => {
+        const x = getX(i);
+        const y = getY(d.ma7);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      // Draw 7-Day Trend Glow Nodes
+      data.forEach((d, i) => {
+        const x = getX(i);
+        const y = getY(d.ma7);
+        ctx.fillStyle = '#10b981';
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // X Axis Date labels
+        if (i === 0 || i === data.length - 1 || i % Math.ceil(data.length / 5) === 0) {
+          ctx.fillStyle = '#64748b';
+          ctx.font = '9px Inter';
+          ctx.textAlign = 'center';
+          ctx.fillText(d.date.slice(5), x, height - padding.bottom + 15);
+        }
+      });
+    }
+
+    function renderWeightHistoryTable() {
+      const data = getSortedWeightData().reverse();
+      const tbody = document.getElementById('weight-history-tbody');
+
+      if (data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-slate-500">No weight history records found.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = data.map(d => `
+        <tr class="hover:bg-slate-900/40">
+          <td class="py-2.5 px-3 font-medium text-slate-300">${d.date}</td>
+          <td class="py-2.5 px-3 font-bold text-white">${d.weight} kg</td>
+          <td class="py-2.5 px-3 font-semibold text-teal-400">${d.ma7} kg</td>
+          <td class="py-2.5 px-3 text-right">
+            <button onclick="deleteWeightLog('${d.date}')" class="text-slate-500 hover:text-red-400 p-1">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // -------------------------------------------------------------
+    // DATA PERSISTENCE (EXPORT & IMPORT JSON)
+    // -------------------------------------------------------------
+    function exportData() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `leantrack_backup_${getTodayString()}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function triggerImport() {
+      document.getElementById('importFileInput').click();
+    }
+
+    function importData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (imported.profile && imported.logs) {
+            state.profile = imported.profile;
+            state.logs = imported.logs;
+            saveState();
+            alert("Backup data restored successfully!");
+            location.reload();
+          } else {
+            alert("Invalid backup file format.");
+          }
+        } catch (err) {
+          alert("Error parsing backup JSON file.");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // Helper: HTML Escaping
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, function(m) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+      });
+    }
+
+    // Window Load Initialization
+    window.onload = function() {
+      initApp();
+    };
+  </script>
+
+</body>
+</html>
